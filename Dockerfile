@@ -100,7 +100,7 @@ EXPOSE 8080
 
 # Ensure scripts are executable
 RUN set -eux; \
-    chmod +x /usr/local/bin/healthcheck.sh /usr/local/bin/wait-for-db.sh; \
+    chmod +x /usr/local/bin/healthcheck.sh /usr/local/bin/wait-for-db.sh /usr/local/bin/print-setup-password.sh; \
     chmod +x /etc/s6-overlay/s6-rc.d/*/run || true; \
     chmod +x /etc/s6-overlay/s6-rc.d/*/up || true
 

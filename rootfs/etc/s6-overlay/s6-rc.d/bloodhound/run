@@ -14,6 +14,7 @@ if [ -n "${BLOODHOUND_CMD:-}" ]; then
 fi
 
 echo "[bloodhound] starting BloodHound"
-exec /usr/local/bin/bloodhound -configfile /bloodhound.config.json
+# Stream output to both Docker logs and a local log file for password extraction
+exec sh -lc "/usr/local/bin/bloodhound -configfile /bloodhound.config.json 2>&1 | tee -a /var/log/bloodhound.log"
 
 

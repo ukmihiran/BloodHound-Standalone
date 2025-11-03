@@ -2,7 +2,7 @@
 
 Single-container image bundling BloodHound Community Edition, Neo4j 5, and PostgreSQL 16. No external DB setup required.
 
-Reference: BloodHound CE Quickstart ([link](https://bloodhound.specterops.io/get-started/quickstart/community-edition-quickstart)).
+Reference: [BloodHound CE Quickstart](https://bloodhound.specterops.io/get-started/quickstart/community-edition-quickstart).
 
 ## Build
 
@@ -10,7 +10,7 @@ Reference: BloodHound CE Quickstart ([link](https://bloodhound.specterops.io/get
 # Multi-arch example (requires docker buildx)
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  -t yourrepo/bloodhound-standalone:latest \
+  -t ukmihiran/bloodhound-standalone:latest \
   .
 ```
 
@@ -28,20 +28,39 @@ docker run -d --name bloodhound-standalone \
   -e NEO4J_PASSWORD=changeit \
   -v bh-pg:/var/lib/postgresql/data \
   -v bh-neo4j:/var/lib/neo4j \
-  yourrepo/bloodhound-standalone:latest
+  ukmihiran/bloodhound-standalone:latest
 
 # Open UI
 # http://localhost:8080/ui/login
 ```
 
 Defaults:
+
 - UI: `http://localhost:8080`
 - Postgres: `localhost:5432` (not exposed)
 - Neo4j: bolt `localhost:7687`, http `localhost:7474` (not exposed)
 
+### Setup password
+
+- On first start, BloodHound generates a temporary setup password. This image will detect it and print it prominently in the container logs.
+- Retrieve it with:
+
+```bash
+docker logs bloodhound-standalone | grep -A1 -B1 'Initial Password Set To'
+```
+
+- If the banner does not appear immediately, the password line looks like:
+
+```bash
+# Initial Password Set To:    <password>    #
+```
+
+- Then browse to `http://localhost:8080/ui/login` and complete setup.
+
 ## Configuration
 
 Environment variables:
+
 - `POSTGRES_USER` (default `postgres`)
 - `POSTGRES_PASSWORD` (default `changeit`)
 - `POSTGRES_DB` (default `postgres`)
@@ -52,12 +71,14 @@ Environment variables:
 - `BLOODHOUND_CMD` (override how BloodHound starts if detection fails)
 
 Volumes:
+
 - `/var/lib/postgresql/data` (Postgres)
 - `/var/lib/neo4j` (Neo4j)
 
 ## Healthcheck
 
 Container reports healthy when:
+
 - UI `/ui/login` responds HTTP 200
 - `pg_isready` is OK
 - `cypher-shell "RETURN 1"` succeeds
@@ -78,4 +99,3 @@ Rebuild weekly or enable the provided GitHub Actions workflow.
 ## License
 
 BloodHound, Neo4j, and PostgreSQL are distributed under their respective licenses. This repository includes only orchestration and packaging.
-

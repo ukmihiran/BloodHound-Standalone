@@ -1,27 +1,21 @@
-# BloodHound Standalone (Unofficial)
+# BloodHound Standalone
 
-Single-container image bundling BloodHound Community Edition, Neo4j 5, and PostgreSQL 16. No external DB setup required.
+[![CI](https://github.com/ukmihiran/BloodHound-Standalone/actions/workflows/publish.yml/badge.svg?branch=main)](https://github.com/ukmihiran/BloodHound-Standalone/actions/workflows/publish.yml?query=branch%3Amain)
+[![version](https://img.shields.io/github/v/tag/ukmihiran/BloodHound-Standalone?sort=semver)](https://github.com/ukmihiran/BloodHound-Standalone/tags)
+[![pulls](https://img.shields.io/docker/pulls/ukmihiran/bloodhound-standalone)](https://hub.docker.com/r/ukmihiran/bloodhound-standalone)
+[![size](https://img.shields.io/docker/image-size/ukmihiran/bloodhound-standalone/latest?arch=amd64)](https://hub.docker.com/r/ukmihiran/bloodhound-standalone)
+![platforms](https://img.shields.io/badge/platforms-amd64%20|%20arm64-2ea44f?logo=docker)
 
-Reference: [BloodHound CE Quickstart](https://bloodhound.specterops.io/get-started/quickstart/community-edition-quickstart).
+Single-container image for BloodHound Community Edition with embedded Neo4j 4.4 and PostgreSQL 16. No external DBs required.
 
-## Build
-
-```bash
-# Multi-arch example (requires docker buildx)
-docker buildx build \
-  --platform linux/amd64,linux/arm64 \
-  -t ukmihiran/bloodhound-standalone:latest \
-  .
-```
-
-## Run
+## Quickstart
 
 ```bash
 # Persist databases
 docker volume create bh-pg
 docker volume create bh-neo4j
 
-# Start container
+# Start
 docker run -d --name bloodhound-standalone \
   -p 8080:8080 \
   -e POSTGRES_PASSWORD=changeit \
@@ -30,72 +24,39 @@ docker run -d --name bloodhound-standalone \
   -v bh-neo4j:/var/lib/neo4j \
   ukmihiran/bloodhound-standalone:latest
 
+# Get setup password banner (first run)
+docker logs -f bloodhound-standalone
+
 # Open UI
 # http://localhost:8080/ui/login
 ```
 
-Defaults:
+Notes:
 
-- UI: `http://localhost:8080`
-- Postgres: `localhost:5432` (not exposed)
-- Neo4j: bolt `localhost:7687`, http `localhost:7474` (not exposed)
+- Multi-arch: `linux/amd64` and `linux/arm64` (auto-selected by Docker).
+- First start prints a banner with the temporary setup password.
 
-### Setup password
+## Tags
 
-- On first start, BloodHound generates a temporary setup password. This image will detect it and print it prominently in the container logs.
-- Retrieve it with:
-
-```bash
-docker logs bloodhound-standalone | grep -A1 -B1 'Initial Password Set To'
-```
-
-- If the banner does not appear immediately, the password line looks like:
+- `latest` – rolling
+- Semver releases – e.g. `v0.2.0`
 
 ```bash
-# Initial Password Set To:    <password>    #
+docker pull ukmihiran/bloodhound-standalone:latest
+docker pull ukmihiran/bloodhound-standalone:v0.2.0
 ```
 
-- Then browse to `http://localhost:8080/ui/login` and complete setup.
+## Configuration (minimal)
 
-## Configuration
+- `POSTGRES_PASSWORD` – Postgres superuser password (default `changeit`)
+- `NEO4J_PASSWORD` – Neo4j initial password (default `changeit`)
+- `BLOODHOUND_CMD` – override startup command (advanced)
 
-Environment variables:
+## Links
 
-- `POSTGRES_USER` (default `postgres`)
-- `POSTGRES_PASSWORD` (default `changeit`)
-- `POSTGRES_DB` (default `postgres`)
-- `NEO4J_PASSWORD` (default `changeit`)
-- `NEO4J_AUTH` (default `neo4j/changeit`)
-- `DATABASE_URL` (auto-derived if unset)
-- `NEO4J_URI` (default `bolt://127.0.0.1:7687`)
-- `BLOODHOUND_CMD` (override how BloodHound starts if detection fails)
+- Docker Hub: [ukmihiran/bloodhound-standalone](https://hub.docker.com/r/ukmihiran/bloodhound-standalone)
+- BloodHound CE Quickstart: [BloodHound docs](https://bloodhound.specterops.io/get-started/quickstart/community-edition-quickstart)
 
-Volumes:
+---
 
-- `/var/lib/postgresql/data` (Postgres)
-- `/var/lib/neo4j` (Neo4j)
-
-## Healthcheck
-
-Container reports healthy when:
-
-- UI `/ui/login` responds HTTP 200
-- `pg_isready` is OK
-- `cypher-shell "RETURN 1"` succeeds
-
-## Upgrades
-
-- BloodHound: inherited from upstream base image when rebuilding
-- Neo4j/Postgres: minor/patch updates applied automatically on rebuild (pinned majors)
-
-Rebuild weekly or enable the provided GitHub Actions workflow.
-
-## Notes
-
-- This is an unofficial convenience image.
-- Review security posture before exposing ports publicly.
-- Use on systems you own or have explicit authorization to test.
-
-## License
-
-BloodHound, Neo4j, and PostgreSQL are distributed under their respective licenses. This repository includes only orchestration and packaging.
+Unofficial convenience image. Review security posture before exposing services.

@@ -1,0 +1,18 @@
+#!/bin/sh
+set -eu
+
+# Ensure PGDATA exists and is owned by postgres
+mkdir -p "${PGDATA:-/var/lib/postgresql/data}"
+chown -R postgres:postgres /var/lib/postgresql
+
+if [ ! -s "$PGDATA/PG_VERSION" ]; then
+  echo "[postgres] initializing database cluster in $PGDATA"
+  su -s /bin/sh postgres -c "/usr/lib/postgresql/${POSTGRES_MAJOR:-16}/bin/initdb -D '$PGDATA'" >/dev/null || true
+  # Harden pg_hba: allow localhost md5
+  echo "host all all 127.0.0.1/32 md5" >>"$PGDATA/pg_hba.conf"
+  echo "host all all ::1/128 md5" >>"$PGDATA/pg_hba.conf"
+fi
+
+exec su -s /bin/sh postgres -c "/usr/lib/postgresql/${POSTGRES_MAJOR:-16}/bin/postgres -D '$PGDATA' -c listen_addresses=localhost"
+
+

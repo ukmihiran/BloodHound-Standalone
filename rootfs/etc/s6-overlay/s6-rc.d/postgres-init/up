@@ -1,0 +1,4 @@
+#!/usr/bin/execlineb -P
+exec -c /bin/sh /etc/s6-overlay/s6-rc.d/postgres-init/up.sh
+
+

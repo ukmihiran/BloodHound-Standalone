@@ -1,0 +1,45 @@
+name: ci-build
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+  schedule:
+    - cron: '0 6 * * 1' # weekly Monday 06:00 UTC
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ github.repository_owner }}/bloodhound-standalone
+          tags: |
+            type=raw,value=ci-${{ github.run_id }}
+
+      - name: Build (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: false
+          build-args: |
+            BASE_IMAGE=bloodhound/bloodhound:latest
+            NEO4J_MAJOR=5
+            POSTGRES_MAJOR=16
+          tags: ${{ steps.meta.outputs.tags }}
+

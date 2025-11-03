@@ -1,0 +1,19 @@
+#!/bin/sh
+set -eu
+
+# Optional: wait for DBs using helpers
+/usr/local/bin/wait-for-db.sh
+
+# Wire BloodHound expected env vars (bhe_*) pointing to localhost DBs
+export bhe_database_connection="user=${POSTGRES_USER:-postgres} password=${POSTGRES_PASSWORD:-changeit} dbname=${POSTGRES_DB:-postgres} host=127.0.0.1"
+export bhe_neo4j_connection="neo4j://neo4j:${NEO4J_PASSWORD:-changeit}@127.0.0.1:7687/"
+
+if [ -n "${BLOODHOUND_CMD:-}" ]; then
+  echo "[bloodhound] starting with BLOODHOUND_CMD: $BLOODHOUND_CMD"
+  exec sh -lc "$BLOODHOUND_CMD"
+fi
+
+echo "[bloodhound] starting BloodHound"
+exec /usr/local/bin/bloodhound -configfile /bloodhound.config.json
+
+

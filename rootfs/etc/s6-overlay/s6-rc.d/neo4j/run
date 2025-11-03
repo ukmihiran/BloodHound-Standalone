@@ -1,0 +1,26 @@
+#!/bin/sh
+set -eu
+
+# Ensure directories and ownership
+mkdir -p /var/lib/neo4j /var/log/neo4j /var/run/neo4j /var/tmp/neo4j
+chown -R neo4j:neo4j /var/lib/neo4j /var/log/neo4j /var/run/neo4j /var/tmp/neo4j
+
+# Set auth env using NEO4J_PASSWORD if present
+if [ -n "${NEO4J_PASSWORD:-}" ]; then
+  export NEO4J_AUTH="neo4j/${NEO4J_PASSWORD}"
+fi
+
+export NEO4J_HOME=/var/lib/neo4j
+
+if command -v neo4j >/dev/null 2>&1; then
+  # Set initial password (must be done before first DB start)
+  if [ -n "${NEO4J_PASSWORD:-}" ]; then
+    /usr/bin/neo4j-admin dbms set-initial-password "${NEO4J_PASSWORD}" >/dev/null 2>&1 || /usr/bin/neo4j-admin set-initial-password "${NEO4J_PASSWORD}" >/dev/null 2>&1 || true
+  fi
+  exec su -s /bin/sh neo4j -c "neo4j console"
+fi
+
+echo "[neo4j] 'neo4j' command not found" >&2
+exit 1
+
+
